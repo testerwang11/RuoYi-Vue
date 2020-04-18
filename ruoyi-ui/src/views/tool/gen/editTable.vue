@@ -5,20 +5,19 @@
         <basic-info-form ref="basicInfo" :info="info" />
       </el-tab-pane>
       <el-tab-pane label="字段信息" name="cloum">
-        <el-table :data="cloumns" :max-height="tableHeight">
-          <el-table-column label="序号" type="index" min-width="5%" />
+        <el-table ref="dragTable" :data="cloumns" row-key="columnId" :max-height="tableHeight">
+          <el-table-column label="序号" type="index" min-width="5%" class-name="allowDrag" />
           <el-table-column
             label="字段列名"
             prop="columnName"
             min-width="10%"
             :show-overflow-tooltip="true"
           />
-          <el-table-column
-            label="字段描述"
-            prop="columnComment"
-            min-width="10%"
-            :show-overflow-tooltip="true"
-          />
+          <el-table-column label="字段描述" min-width="10%">
+            <template slot-scope="scope">
+              <el-input v-model="scope.row.columnComment"></el-input>
+            </template>
+          </el-table-column>
           <el-table-column
             label="物理类型"
             prop="columnType"
@@ -127,6 +126,7 @@ import { getGenTable, updateGenTable } from "@/api/tool/gen";
 import { optionselect as getDictOptionselect } from "@/api/system/dict/type";
 import basicInfoForm from "./basicInfoForm";
 import genInfoForm from "./genInfoForm";
+import Sortable from 'sortablejs'
 export default {
   name: "GenEdit",
   components: {
@@ -199,6 +199,19 @@ export default {
       this.$store.dispatch("tagsView/delView", this.$route);
       this.$router.push({ path: "/tool/gen", query: { t: Date.now()}})
     }
+  },
+  mounted() {
+    const el = this.$refs.dragTable.$el.querySelectorAll(".el-table__body-wrapper > table > tbody")[0];
+    const sortable = Sortable.create(el, {
+      handle: ".allowDrag",
+      onEnd: evt => {
+        const targetRow = this.cloumns.splice(evt.oldIndex, 1)[0];
+        this.cloumns.splice(evt.newIndex, 0, targetRow);
+        for (let index in this.cloumns) {
+          this.cloumns[index].sort = parseInt(index) + 1;
+        }
+      }
+    });
   }
 };
 </script>

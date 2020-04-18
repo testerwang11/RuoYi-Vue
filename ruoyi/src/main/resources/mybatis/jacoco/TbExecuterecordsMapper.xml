@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.jacoco.mapper.TbExecuterecordsMapper">
+    
+    <resultMap type="TbExecuterecords" id="TbExecuterecordsResult">
+        <result property="id"    column="id"    />
+        <result property="projectname"    column="projectName"    />
+        <result property="codebranch"    column="codeBranch"    />
+        <result property="diffurl"    column="diffUrl"    />
+        <result property="executetime"    column="executeTime"    />
+        <result property="serverip"    column="serverIp"    />
+        <result property="reportpath"    column="reportPath"    />
+    </resultMap>
+
+    <sql id="selectTbExecuterecordsVo">
+        select id, projectName, codeBranch, diffUrl, executeTime, serverIp, reportPath from tb_executerecords
+    </sql>
+
+    <select id="selectTbExecuterecordsList" parameterType="TbExecuterecords" resultMap="TbExecuterecordsResult">
+        <include refid="selectTbExecuterecordsVo"/>
+        <where>  
+            <if test="projectname != null  and projectname != ''"> and projectName like concat('%', #{projectname}, '%')</if>
+            <if test="codebranch != null  and codebranch != ''"> and codeBranch = #{codebranch}</if>
+            <if test="diffurl != null  and diffurl != ''"> and diffUrl = #{diffurl}</if>
+            <if test="executetime != null "> and executeTime = #{executetime}</if>
+            <if test="serverip != null  and serverip != ''"> and serverIp = #{serverip}</if>
+            <if test="reportpath != null  and reportpath != ''"> and reportPath = #{reportpath}</if>
+        </where>
+    </select>
+    
+    <select id="selectTbExecuterecordsById" parameterType="Long" resultMap="TbExecuterecordsResult">
+        <include refid="selectTbExecuterecordsVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertTbExecuterecords" parameterType="TbExecuterecords" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_executerecords
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="projectname != null  and projectname != ''">projectName,</if>
+            <if test="codebranch != null  and codebranch != ''">codeBranch,</if>
+            <if test="diffurl != null  and diffurl != ''">diffUrl,</if>
+            <if test="executetime != null ">executeTime,</if>
+            <if test="serverip != null  and serverip != ''">serverIp,</if>
+            <if test="reportpath != null  and reportpath != ''">reportPath,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="projectname != null  and projectname != ''">#{projectname},</if>
+            <if test="codebranch != null  and codebranch != ''">#{codebranch},</if>
+            <if test="diffurl != null  and diffurl != ''">#{diffurl},</if>
+            <if test="executetime != null ">#{executetime},</if>
+            <if test="serverip != null  and serverip != ''">#{serverip},</if>
+            <if test="reportpath != null  and reportpath != ''">#{reportpath},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTbExecuterecords" parameterType="TbExecuterecords">
+        update tb_executerecords
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="projectname != null  and projectname != ''">projectName = #{projectname},</if>
+            <if test="codebranch != null  and codebranch != ''">codeBranch = #{codebranch},</if>
+            <if test="diffurl != null  and diffurl != ''">diffUrl = #{diffurl},</if>
+            <if test="executetime != null ">executeTime = #{executetime},</if>
+            <if test="serverip != null  and serverip != ''">serverIp = #{serverip},</if>
+            <if test="reportpath != null  and reportpath != ''">reportPath = #{reportpath},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteTbExecuterecordsById" parameterType="Long">
+        delete from tb_executerecords where id = #{id}
+    </delete>
+
+    <delete id="deleteTbExecuterecordsByIds" parameterType="String">
+        delete from tb_executerecords where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

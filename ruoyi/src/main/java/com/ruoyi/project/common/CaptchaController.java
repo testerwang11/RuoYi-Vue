@@ -59,4 +59,9 @@ public class CaptchaController
             stream.close();
         }
     }
+
+    @GetMapping("/captchaImage2")
+    public String test1() {
+        return "test1222";
+    }
 }

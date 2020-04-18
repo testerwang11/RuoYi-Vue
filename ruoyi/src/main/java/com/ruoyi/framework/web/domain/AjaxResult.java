@@ -3,6 +3,8 @@ package com.ruoyi.framework.web.domain;
 import java.util.HashMap;
 import com.ruoyi.common.constant.HttpStatus;
 import com.ruoyi.common.utils.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 操作消息提醒
@@ -11,6 +13,9 @@ import com.ruoyi.common.utils.StringUtils;
  */
 public class AjaxResult extends HashMap<String, Object>
 {
+    private static final Logger log = LoggerFactory.getLogger(AjaxResult.class);
+
+
     private static final long serialVersionUID = 1L;
 
     /** 状态码 */
@@ -98,6 +103,8 @@ public class AjaxResult extends HashMap<String, Object>
      */
     public static AjaxResult success(String msg, Object data)
     {
+        log.info("响应结果:"+data);
+
         return new AjaxResult(HttpStatus.SUCCESS, msg, data);
     }
 
@@ -131,6 +138,7 @@ public class AjaxResult extends HashMap<String, Object>
      */
     public static AjaxResult error(String msg, Object data)
     {
+        log.info("响应结果:"+data);
         return new AjaxResult(HttpStatus.ERROR, msg, data);
     }
 

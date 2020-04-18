@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.jacoco.mapper.TbProjectMapper">
+    
+    <resultMap type="TbProject" id="TbProjectResult">
+        <result property="id"    column="id"    />
+        <result property="projectname"    column="projectName"    />
+        <result property="projectgroup"    column="projectGroup"    />
+        <result property="codepath"    column="codePath"    />
+        <result property="codebranch"    column="codeBranch"    />
+        <result property="projectconfig"    column="projectConfig"    />
+    </resultMap>
+
+    <sql id="selectTbProjectVo">
+        select id, projectName, projectGroup, codePath, codeBranch, projectConfig from tb_project
+    </sql>
+
+    <select id="selectTbProjectList" parameterType="TbProject" resultMap="TbProjectResult">
+        <include refid="selectTbProjectVo"/>
+        <where>  
+            <if test="projectname != null  and projectname != ''"> and projectName like concat('%', #{projectname}, '%')</if>
+            <if test="projectgroup != null  and projectgroup != ''"> and projectGroup = #{projectgroup}</if>
+            <if test="codepath != null  and codepath != ''"> and codePath = #{codepath}</if>
+            <if test="codebranch != null  and codebranch != ''"> and codeBranch = #{codebranch}</if>
+            <if test="projectconfig != null  and projectconfig != ''"> and projectConfig = #{projectconfig}</if>
+        </where>
+    </select>
+    
+    <select id="selectTbProjectById" parameterType="Long" resultMap="TbProjectResult">
+        <include refid="selectTbProjectVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertTbProject" parameterType="TbProject" useGeneratedKeys="true" keyProperty="id">
+        insert into tb_project
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="projectname != null  and projectname != ''">projectName,</if>
+            <if test="projectgroup != null  and projectgroup != ''">projectGroup,</if>
+            <if test="codepath != null  and codepath != ''">codePath,</if>
+            <if test="codebranch != null  and codebranch != ''">codeBranch,</if>
+            <if test="projectconfig != null ">projectConfig,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="projectname != null  and projectname != ''">#{projectname},</if>
+            <if test="projectgroup != null  and projectgroup != ''">#{projectgroup},</if>
+            <if test="codepath != null  and codepath != ''">#{codepath},</if>
+            <if test="codebranch != null  and codebranch != ''">#{codebranch},</if>
+            <if test="projectconfig != null ">#{projectconfig},</if>
+         </trim>
+    </insert>
+
+    <update id="updateTbProject" parameterType="TbProject">
+        update tb_project
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="projectname != null  and projectname != ''">projectName = #{projectname},</if>
+            <if test="projectgroup != null  and projectgroup != ''">projectGroup = #{projectgroup},</if>
+            <if test="codepath != null  and codepath != ''">codePath = #{codepath},</if>
+            <if test="codebranch != null  and codebranch != ''">codeBranch = #{codebranch},</if>
+            <if test="projectconfig != null ">projectConfig = #{projectconfig},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteTbProjectById" parameterType="Long">
+        delete from tb_project where id = #{id}
+    </delete>
+
+    <delete id="deleteTbProjectByIds" parameterType="String">
+        delete from tb_project where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

@@ -1,18 +1,20 @@
 package com.ruoyi.project.sjbapi.service;
 
+import cn.hutool.crypto.digest.MD5;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.jayway.jsonpath.JsonPath;
+import com.ruoyi.common.utils.security.Md5Utils;
 import com.ruoyi.project.sjbapi.core.BaseCall;
 import com.ruoyi.project.sjbapi.util.StringUtils;
 import io.qameta.allure.Step;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import oshi.util.StringUtil;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -46,7 +48,7 @@ public class CommonService2 extends BaseService {
         return commonService;
     }
 
-    public JSONObject publishOrder5(int unit, int unitprice, String stockKind, String autoCheck, String autoUpdate, String laterpaystate, String loadpayfee, String loadpayMoneyFee, String loadpayEtcFee, String deliveryfee, String uploadpayfee, String agentCodes, String stockqrcode, String tradeOrder, String sessionID) {
+    public JSONObject publishOrder5(int unit, int unitprice, String stockKind, String autoCheck, String workStock, String autoUpdate, String laterpaystate, String loadpayfee, String loadpayMoneyFee, String loadpayEtcFee, String deliveryfee, String uploadpayfee, String agentCodes, String stockqrcode, String tradeOrder, String sessionID) {
         int price = unitprice * unit;
         String freightKind = "2";
         String stockDesc;
@@ -58,7 +60,6 @@ public class CommonService2 extends BaseService {
             stockDesc = "账期";
             clearingCycle = "1";
         }
-
         String stockType = "2";
         String haulageoperatorstate = "1";
         String haulageoperatorname = "";
@@ -69,32 +70,56 @@ public class CommonService2 extends BaseService {
         } else {
             openable = "true";
         }
-
+        //地址
         JSONArray addressData = this.sjbAllService.companyAddressQueryList1((String) null, sessionID).getJSONArray("zones");
         int size = addressData.size();
         JSONObject fahuo = addressData.getJSONObject(size - 1);
         JSONObject shouhuo = addressData.getJSONObject(size - 2);
+
         String oilMoney = Integer.parseInt(loadpayfee) + Integer.parseInt(uploadpayfee) + "";
         JSONObject response = this.sjbFinanceService.oilcardMoneyQuery1(oilMoney, String.valueOf(price * 10000), loadpayEtcFee, "1", "0", sessionID);
+
+
+        //收单规则查询
         String ruleCode = this.sjbStockOrderService.stockCoalruleQuery1(shouhuo.getString("contastTel"), sessionID).getJSONArray("rules").getJSONObject(0).getString("ruleCode");
+        //企业收货货物单价查询
         JSONObject response2 = this.sjbStockOrderService.stockCompanycoalQuery1(sessionID).getJSONArray("list").getJSONObject(0);
         String freightname = response2.getString("freightname");
         int freightPrice = response2.getInteger("price");
+        //企业配置查询
         JSONObject configData = this.sjbFinanceService.accountConfigQuery1(sessionID);
         haulageoperatorcode = configData.getJSONObject("response").getString("companycode");
         haulageoperatorname = configData.getJSONObject("response").getString("companyname");
-        response = this.sjbStockOrderService.stockPublish2("0", "false", (String) null, (String) null, "false", (String) null, (String) null, (String) null, stockDesc, stockType, stockKind, shouhuo.getString("regionCode"), shouhuo.getString("regionName"), fahuo.getString("regionCode"), fahuo.getString("regionName"), "0", "0", "0", "0", "0", openable, "0.00", (String) null, "0.00", "0.0", "0.0", (String) null, fahuo.getString("lon"), fahuo.getString("lat"), (String) null, String.valueOf(price), unitprice + "元/吨", unit + "吨", (String) null, (String) null, (String) null, (String) null, "false", "false", "false", "true", (String) null, "0", "0", shouhuo.getString("zoneCode"), fahuo.getString("zoneCode"), (String) null, tradeOrder, "3", "2147483647", clearingCycle, (String) null, String.valueOf(price * 10000), freightKind, "0", "0", "0", loadpayfee, "0", loadpayMoneyFee, "0", loadpayEtcFee, "0", deliveryfee, "0", uploadpayfee, haulageoperatorstate, haulageoperatorname, haulageoperatorcode, response.getString("rateamount"), laterpaystate, "", agentCodes, autoUpdate, autoCheck, "false", (String) null, (String) null, (String) null, System.currentTimeMillis() + "", ruleCode, freightname, freightPrice + "", (String) null, "false", "false", stockqrcode, sessionID);
+        //发货
+        String freightRates = String.valueOf(price * 10000);
+        String offlinepay = "false";
+        JSONObject response3 = new JSONObject();
+        if (unitprice == 0) {
+            haulageoperatorstate = "0";
+            freightPrice = 0;
+            freightRates = String.valueOf(unit * freightPrice);
+            clearingCycle = "0";
+            laterpaystate = null;
+            stockDesc = "线下";
+            offlinepay = "true";
+            response3 = this.sjbStockOrderService.stockPublish2("0", "false", (String) null, (String) null, "false", (String) null, (String) null, (String) null, stockDesc, stockType, stockKind, shouhuo.getString("regionCode"), shouhuo.getString("regionName"), fahuo.getString("regionCode"), fahuo.getString("regionName"), "0", "0", "0", "0", "0", openable, "0.00", (String) null, "0.00", "0.0", "0.0", (String) null, fahuo.getString("lon"), fahuo.getString("lat"), (String) null, String.valueOf(price), unitprice + "元/吨", unit + "吨", (String) null, (String) null, (String) null, (String) null, "false", "false", "false", "true", (String) null, "0", "0", shouhuo.getString("zoneCode"), fahuo.getString("zoneCode"), (String) null, tradeOrder, "3", "2147483647", clearingCycle, (String) null, freightRates, freightKind, "0", "0", "0", loadpayfee, "0", loadpayMoneyFee, "0", loadpayEtcFee, "0", deliveryfee, "0", uploadpayfee, haulageoperatorstate, haulageoperatorname, haulageoperatorcode, response.getString("rateamount"), laterpaystate, "", agentCodes, autoUpdate, autoCheck, workStock, (String) null, (String) null, (String) null, System.currentTimeMillis() + "", ruleCode, freightname, freightPrice + "", (String) null, "false", offlinepay, stockqrcode, "25", sessionID);
+
+        } else {
+
+            response3 = this.sjbStockOrderService.stockPublish2("0", "false", (String) null, (String) null, "false", (String) null, (String) null, (String) null, stockDesc, stockType, stockKind, shouhuo.getString("regionCode"), shouhuo.getString("regionName"), fahuo.getString("regionCode"), fahuo.getString("regionName"), "0", "0", "0", "0", "0", openable, "0.00", (String) null, "0.00", "0.0", "0.0", (String) null, fahuo.getString("lon"), fahuo.getString("lat"), (String) null, String.valueOf(price), unitprice + "元/吨", unit + "吨", (String) null, (String) null, (String) null, (String) null, "false", "false", "false", "true", (String) null, "0", "0", shouhuo.getString("zoneCode"), fahuo.getString("zoneCode"), (String) null, tradeOrder, "3", "2147483647", clearingCycle, (String) null, freightRates, freightKind, "0", "0", "0", loadpayfee, "0", loadpayMoneyFee, "0", loadpayEtcFee, "0", deliveryfee, "0", uploadpayfee, haulageoperatorstate, haulageoperatorname, haulageoperatorcode, response.getString("rateamount"), laterpaystate, "", agentCodes, autoUpdate, autoCheck, workStock, (String) null, (String) null, (String) null, System.currentTimeMillis() + "", ruleCode, freightname, freightPrice + "", (String) null, "false", offlinepay, stockqrcode, null, sessionID);
+        }
         JSONObject res = new JSONObject();
-        if (response.getBoolean("state")) {
+        if (response3.getBoolean("state")) {
             JSONObject stockObject = this.sjbStockOrderService.stockQueryGroupPublish1((String) null, "true", (String) null, (String) null, "0", "10", sessionID).getJSONArray("runningStocks").getJSONObject(0);
             String stockCode = stockObject.getJSONObject("goodsInfo").getString("stockcode");
             res.put("stockCode", stockCode);
         } else {
-            res = response;
+            res = response3;
         }
 
         return res;
     }
+
 
     @Step("经纪人发货")
     public String agentUpdateStock(String stockCode, String agentMode, String agentUnitPrice, String agentMoney, String informationfess, String vehiclefee, String advanceexpenditured, String advancePercent, String advanceMoney, String advanceType, String checkForFee, String allowLossUnit, String unitPrice, String offlineServerfee, String allowUpUnit, String unitUpPrice, String sessionID4) {
@@ -162,7 +187,11 @@ public class CommonService2 extends BaseService {
         String phone = accountData.getJSONObject("userInfo").getString("userMobile");
         String userCode = driverData.getString("usercode");
         String id = driverData.getString("id");
-        JSONObject response = this.sjbStockOrderService.assureorderCreate2(stockCode, userCode, phone, id, "", "0", "", agentCode, sessionID2);
+        String contractType = null;
+        if (com.ruoyi.common.utils.StringUtils.isEmpty(agentCode)) {
+            contractType = "0";
+        }
+        JSONObject response = this.sjbStockOrderService.assureorderCreate3(stockCode, userCode, phone, id, null, contractType, null, agentCode, sessionID2);
         return response;
     }
 
@@ -254,12 +283,14 @@ public class CommonService2 extends BaseService {
         return this.sjbStockOrderService.assureorderSigninCreateUploading1(orderNumber, "/wyyt-image/2018/12/27/5169833204861753928.jpg", targetAddresses.getString("address"), targetAddresses.getString("zoneCode"), targetAddresses.getString("lon"), targetAddresses.getString("lat"), "2", "0", "0", sessionID2);
     }
 
+
     @Step("收单员签收")
     public JSONObject signIn(String orderNumber, double unit, String unitPrice, String sessionID3) {
+        log.info("开始签收运单:" + orderNumber);
         JSONObject response1 = this.sjbToolService.webbusinessQuerySettingDetail1(orderNumber, (String) null, sessionID3);
         String ruleCode = response1.getJSONArray("lineRules").getJSONObject(0).getString("ruleCode");
         JSONObject response2 = this.sjbToolService.webbusinessQueryAssureorderDetailSigninpart1(orderNumber, (String) null, sessionID3);
-        String stockUnit = response2.getString("stockunit");
+        //String stockUnit = response2.getString("stockunit");
         double stockUnitNum = response2.getDouble("stockunitnum");
         if (StringUtils.isBlank(unitPrice)) {
             unitPrice = response2.getString("unitprice");
@@ -272,9 +303,11 @@ public class CommonService2 extends BaseService {
         data3.put("actualunit", stockUnitNum + unit);
         data3.put("otherdeductions", 0);
         data3.put("unitprice", stockKindMemo + "," + Integer.parseInt(StringUtils.getNumFromStr(unitPrice)) * 10000);
+        log.info("这里啊");
         JSONObject result = this.sjbToolService.webbusinessConsultCalculateResult1(orderNumber, ruleCode, data3.toString(), stockCost / 10000 + "", stockUnitNum + "", unitPrice, sessionID3);
         String cashMoney = result.getString("resideneedpay");
         JSONObject response = this.sjbToolService.webbusinessLanuchAssureorderConsult1(orderNumber, (String) null, "现场协商一致", "", "", "/wyyt-image/2018/12/27/5169833204861753928.jpg", data3.toString(), ruleCode, stockCost / 10000 + "", stockUnitNum + "", unitPrice, "0", "0", cashMoney, "1", sessionID3);
+        log.info("运单签收完毕:" + orderNumber);
         return response;
     }
 
@@ -436,6 +469,17 @@ public class CommonService2 extends BaseService {
                             break;
                         }
                     }
+                } else if (eMsg.contains("抢单之前请先结束任务单")) {
+                    String somethingcode = eMsg.split("任务单")[1].split("还未完结")[0];
+                    sjbStockOrderService.assureorderOrderscheduleFinishOrderSchedule(somethingcode, sj_s);
+                    for (int i = 0; i < 3; i++) {
+                        Thread.sleep(5000);
+                        response = this.assureorderCreate(stockCode, agentCode, sj_s);
+                        if (response.containsKey("stockcode")) {
+                            break;
+                        }
+                    }
+
                 } else {
                     Thread.sleep(1000 * 10);
                     response = this.assureorderCreate(stockCode, agentCode, sj_s);
@@ -501,15 +545,24 @@ public class CommonService2 extends BaseService {
     }
 
     public JSONObject order4(String stockCode, String agentCode, double deficit, String unitPrice, String driverPhone, String step) {
-        String password = "123456", payPwd = "123456";
-        JSONObject response_sj = this.accountService.accountLogin1(driverPhone, "123456", "1", "true", "");
+        String password = "sjb123456", payPwd = "142536";
+        //司机登录
+        JSONObject response_sj = this.accountService.accountLogin1(driverPhone, password, "1", "true", "");
         String sj_s = JsonPath.parse(response_sj).read("$.sessionID");
+        //司机从详情获取企业手机号
         JSONObject response_xq = this.sjbStockOrderService.stockQueryDetail2((String) null, stockCode, (String) null, (String) null, (String) null, (String) null, sj_s);
         String companyPhone = response_xq.getJSONObject("cmpnyInfo").getString("companyPhone");
-        String sdyPhone = response_xq.getJSONObject("goodsInfo").getJSONArray("targetaddresses").getJSONObject(0).getString("contastTel");
-        JSONObject response_qy = this.accountService.accountCompanyLogin1(companyPhone, "123456", "2", "true", "");
+
+        //企业登录
+        //String sdyPhone = response_xq.getJSONObject("goodsInfo").getJSONArray("targetaddresses").getJSONObject(0).getString("contastTel");
+        JSONObject response_qy = this.accountService.accountCompanyLogin1(companyPhone, password, "2", "true", "");
         String qy_s = JsonPath.parse(response_qy).read("$.user.sessionID");
-        JSONObject response3 = this.sjbToolService.webMobileLoginPassword1(sdyPhone, "123456", "", "");
+
+        //企业从详情获取收单员手机号
+        JSONObject response_xq2 = this.sjbStockOrderService.stockQueryDetail2((String) null, stockCode, (String) null, (String) null, (String) null, (String) null, qy_s);
+        String sdyPhone = response_xq2.getJSONObject("goodsInfo").getJSONArray("targetaddresses").getJSONObject(0).getString("contastTel");
+        //收单员登录
+        JSONObject response3 = this.sjbToolService.webMobileLoginPassword1(sdyPhone, password, "", "");
         String sdy_s = JsonPath.parse(response3).read("$.session");
         String orderNo = "";
         JSONObject res = new JSONObject();
@@ -554,61 +607,6 @@ public class CommonService2 extends BaseService {
             res.put("status", status);
             return res;
         }
-
-            /*if (step.equals("1")) {
-                return res;
-            }
-            Thread.sleep(5 * 1000);
-            if (this.checkOrderState(orderNo, "调度完成装货付款", qy_s, sj_s)) {
-                //this.confirmDriver(stockCode, orderNo, qy_s, password);
-                this.confirmLoading(orderNo, password, qy_s);
-            }
-
-            if (this.checkOrderState(orderNo, "调度付款", qy_s, sj_s)) {
-                this.confirmDriver(stockCode, orderNo, qy_s, password);
-                this.confirmLoading(orderNo, password, qy_s);
-            }
-
-            if (step.equals("2")) {
-                log.info("跳出:" + 2);
-                return res;
-            }
-
-            if (this.checkOrderState(orderNo, "卸货地签到", qy_s, sj_s)) {
-                this.unloadingSign(orderNo, sj_s);
-            }
-
-            if (step.equals("3")) {
-                return res;
-            }
-
-            if (this.checkOrderState(orderNo, "客户签收", qy_s, sj_s)) {
-                response = this.signIn(orderNo, deficit, unitPrice, sd_s);
-                if (response.toJSONString().contains("业务逻辑出错")) {
-                    eMsg = JsonPath.parse(response).read("$.subErrors[0].message");
-                    throw new Exception(eMsg);
-                }
-            }
-
-            if (step.equals("4")) {
-                return res;
-            }
-
-            if (this.checkOrderState(orderNo, "等待处理协商扣款", qy_s, sj_s)) {
-                this.kouKuanXs(orderNo, sj_s);
-            }
-
-            if (step.equals("5")) {
-                return res;
-            }
-
-            if (this.checkOrderState(orderNo, "企业复核", qy_s, sj_s)) {
-                response = this.companyOrderCheck2(orderNo, true, password, qy_s);
-                if (response.toJSONString().contains("业务逻辑出错")) {
-                    eMsg = (String) JsonPath.parse(response).read("$.subErrors[0].message");
-                    throw new Exception(eMsg);
-                }
-            }*/
         try {
             if (com.ruoyi.common.utils.StringUtils.isEmpty(step)) {
                 oderFlow(stockCode, orderNo, deficit, unitPrice, payPwd, qy_s, sj_s, sdy_s);
@@ -710,7 +708,7 @@ public class CommonService2 extends BaseService {
     }
 
     public JSONObject xhqd(String phone) {
-        JSONObject response2 = this.accountService.accountLogin1(phone, "123456", "1", "true", "");
+        JSONObject response2 = this.accountService.accountLogin1(phone, "sjb123456", "1", "true", "");
         String sj_s = (String) JsonPath.parse(response2).read("$.sessionID");
         JSONObject res = this.sjbStockOrderService.assureorderDriverqueryList2("1", "1572537600000", "1583833599999", "0", "100", (String) null, (String) null, sj_s);
         Integer ordersimplestate = res.getJSONArray("assureOrders").getJSONObject(0).getJSONObject("assureOrderDTO").getInteger("ordersimplestate");
@@ -799,11 +797,13 @@ public class CommonService2 extends BaseService {
         System.out.println("haszhk:" + haszhk);
         if (!response.getJSONObject("goodsInfo").getBoolean("autoCheck")) {
             //订单没有开启自动确认司机情况
+            log.info("订单没有开启自动确认司机:" + orderNumber);
             response = goConfirmDriver(orderNumber, qy_s, payPwd);
-        } else if (haszhk) {
+        } /*else if (haszhk) {
             //订单开启自动确认司机，但是有装货款或者装货油
+            log.info("订单开启自动确认司机，但是有装货款或者装货油:" + orderNumber);
             response = goConfirmDriver(orderNumber, qy_s, payPwd);
-        } else {
+        }*/ else {
             log.info("$s,该订单自动确认司机", orderNumber);
             response.clear();
             response.put("msg", "订单自动确认司机");
@@ -904,46 +904,8 @@ public class CommonService2 extends BaseService {
                 }
             }
             orderNo = response.getString("orderNumber");
-            String memo = "";
-            int maxRun = 20, i = 0;
-            while (i < maxRun) {
-                i = i++;
-                if (i > maxRun) {
-                    break;
-                }
-                memo = getOrderStatus(orderNo, qy_s);
-                if (memo.endsWith("等待企业确认运单")) {
-                    confirmDriver2(stockCode, orderNo, qy_s, password);
-                }
-                if (memo.endsWith("等待企业装货确认")) {
-                    confirmLoading(orderNo, password, qy_s);
-                }
-                if (memo.endsWith("需卸货签到")) {
-                    unloadingSign(orderNo, qy_s);
-                }
-                if (memo.endsWith("等待企业签收")) {
-                    response = signIn(orderNo, deficit, unitPrice, sdy_s);
-                    if (response.toJSONString().contains("业务逻辑出错")) {
-                        eMsg = JsonPath.parse(response).read("$.subErrors[0].message");
-                        throw new Exception(eMsg);
-                    }
-                }
-                if (memo.endsWith("运单协商中")) {
-                    kouKuanXs(orderNo, sj_s);
-                }
-
-                if (memo.endsWith("企业复核")) {
-                    response = companyOrderCheck2(orderNo, true, password, qy_s);
-                    if (response.toJSONString().contains("业务逻辑出错")) {
-                        eMsg = JsonPath.parse(response).read("$.subErrors[0].message");
-                        throw new Exception(eMsg);
-                    }
-                }
-                if (memo.endsWith("运单已完成")) {
-                    i = 100;
-                }
-
-            }
+            //根据订单状态出来
+            oderFlow(stockCode, orderNo, deficit, unitPrice, password, qy_s, sj_s, sdy_s);
             status = true;
         } catch (Exception e) {
             eMsg = e.getMessage();
@@ -992,7 +954,7 @@ public class CommonService2 extends BaseService {
             }
             orderNo = response.getString("orderNumber");
             //根据订单状态出来
-            oderFlow(stockCode, orderNo, deficit, unitPrice, password, qy_s, sj_s, sdy_s);
+            oderFlow(stockCode, orderNo, deficit, unitPrice, password, qy_s, sj_s, sdy_s, step);
             status = true;
         } catch (Exception e) {
             eMsg = e.getMessage();
@@ -1019,6 +981,9 @@ public class CommonService2 extends BaseService {
     public String oderFlow(String stockCode, String orderNo, double deficit, String unitPrice, String payPwd, String qy_s, String sj_s, String sdy_s) {
         String memo = "", errMsg;
         JSONObject response = new JSONObject();
+
+        JSONObject response2 = sjbStockOrderService.stockQueryDetail2(null, stockCode, null, null, null, null, qy_s);
+
         int maxRun = 20, i = 0;
         while (i < maxRun) {
             i = i + 1;
@@ -1033,7 +998,7 @@ public class CommonService2 extends BaseService {
                 confirmLoading(orderNo, payPwd, qy_s);
             }
             if (memo.endsWith("需卸货签到")) {
-                unloadingSign(orderNo, qy_s);
+                unloadingSign(orderNo, sj_s);
             }
             if (memo.endsWith("等待企业签收")) {
                 response = signIn(orderNo, deficit, unitPrice, sdy_s);
@@ -1095,7 +1060,7 @@ public class CommonService2 extends BaseService {
                 confirmLoading(orderNo, payPwd, qy_s);
             }
             if (memo.endsWith("需卸货签到")) {
-                unloadingSign(orderNo, qy_s);
+                unloadingSign(orderNo, sj_s);
             }
             if (memo.endsWith("等待企业签收")) {
                 response = signIn(orderNo, deficit, unitPrice, sdy_s);
@@ -1119,6 +1084,91 @@ public class CommonService2 extends BaseService {
         }
         return memo;
     }
+
+    /**
+     * 煤炭任务单
+     *
+     * @return
+     */
+    public JSONObject jobOrder(String stockCode, int orderNum, double deficit, String unitPrice, String payPwd, String qy_s, String sj_s, String sdy_s) {
+        JSONObject response = new JSONObject();
+        //接单
+        JSONObject data = createOrder(stockCode, null, sj_s);
+        String workordercode = "";
+        try {
+            String orderNo = data.getString("orderNo");
+            JSONObject orderDeatil = sjbStockOrderService.assureorderQueryDetail1(orderNo, sj_s);
+            workordercode = orderDeatil.getJSONObject("assureOrderDTO").getString("workordercode");
+
+            String lon1 = orderDeatil.getJSONObject("stockRspDTO").getJSONArray("sourceaddresses").getJSONObject(0).getString("lon");
+            String lat1 = orderDeatil.getJSONObject("stockRspDTO").getJSONArray("sourceaddresses").getJSONObject(0).getString("lat");
+
+            String lon2 = orderDeatil.getJSONObject("stockRspDTO").getJSONArray("targetaddresses").getJSONObject(0).getString("lon");
+            String lat2 = orderDeatil.getJSONObject("stockRspDTO").getJSONArray("targetaddresses").getJSONObject(0).getString("lat");
+            String address2 = orderDeatil.getJSONObject("stockRspDTO").getJSONArray("targetaddresses").getJSONObject(0).getString("address");
+            String addressCode2 = orderDeatil.getJSONObject("stockRspDTO").getJSONArray("targetaddresses").getJSONObject(0).getString("zoneCode");
+
+            for (int i = 0; i < orderNum; i++) {
+                if (i > 0) {
+                    //装货签到
+                    Thread.sleep(2000);
+                    response = sjbStockOrderService.assureorderOrderscheduleGoonCoal(workordercode, lon1, lat1, null, sj_s);
+                }
+                Thread.sleep(2000);
+                response = sjbStockOrderService.assureorderQueryOrderscheduleOntheway(workordercode, sj_s);
+                JSONObject orderDeatil2 = sjbStockOrderService.assureorderQueryOrderscheduleDetailCoal(workordercode, sj_s);
+
+                if (i > 0) {
+                    addressCode2 = orderDeatil2.getString("preUnloadAddressCode");
+                    orderNo = orderDeatil2.getString("orderNumber");
+                }
+                //卸货签到
+                response = sjbStockOrderService.assureorderSigninCreateUploadingCoal(orderNo, address2, addressCode2, lon2, lat2, "0", "0", "2", sj_s);
+                Thread.sleep(2000);
+                //签收
+                response = signIn(orderNo, deficit, unitPrice, sdy_s);
+                //复核
+                response = companyOrderCheck2(orderNo, true, payPwd, qy_s);
+            }
+        } catch (Exception e) {
+            log.info(e.getMessage());
+            response.put("errMsg", e.getMessage());
+        } finally {
+            if (StringUtils.isNotBlank(workordercode)) {
+                //结束任务单
+                response = sjbStockOrderService.assureorderOrderscheduleFinishOrderSchedule(workordercode, sj_s);
+            }
+        }
+        return response;
+    }
+
+    public JSONObject jobOrder2(String phone, String passwd, String driverCode, String billNo, String concreateNo, String lat, String lng, int runNum) {
+        //100000009046
+        //114.416351
+        //30.49349
+        String biilUrl = "/wyyt-image/2020/05/27/2262148804921465392.png";
+        JSONObject response = new JSONObject();
+        //调度员登录
+        String session = sjbToolService.mobileLoginPassPounder(phone, DigestUtils.sha1Hex(passwd), "").getString("session");
+        for (int i = 0; i < runNum; i++) {
+            log.info("任务单第:" + (i + 1) + "单");
+            response = sjbToolService.poundOrderInformationQueryBuild("", driverCode, session);
+            String orderNumber = response.getString("orderNumber");
+            String orderScheduleCode = response.getString("orderScheduleCode");
+            JSONObject response2 = sjbToolService.poundOrderInformationSaveBuild(orderNumber, biilUrl, billNo, concreateNo, session);
+            response2.getBoolean("state");
+
+            response = sjbToolService.poundOrderInformationAgainBuild(orderNumber, orderScheduleCode, lat, lng, null, session);
+            response.getBoolean("state");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        return response;
+    }
+
 
     public static void main(String[] args) {
         new CommonService2();

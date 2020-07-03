@@ -560,6 +560,32 @@ public class SJBStockOrderService {
         return new BaseCall(url, "POST").setData(map).addDefHeader().callService().close().getReturnJsonObject();
     }
 
+    @Step("抢单")
+    public JSONObject assureorderCreate3(String stockCode, String driverCode, String driverPhone, String vehicleCode, String stockChannelCode, String contractType, String leaderDriver, String agentCode, String session) {
+        HashMap<String, String> map = new HashMap<>();
+        map.put("stockCode", stockCode);//货源编号
+        map.put("driverCode", driverCode);//司机的usercode
+        map.put("driverPhone", driverPhone);//司机的电话号码
+        map.put("vehicleCode", vehicleCode);//车辆编号
+        map.put("stockChannelCode", stockChannelCode);//信息部分享货源
+        map.put("contractType", contractType);//合同类型, 0:web运单合同,1:app运单合同
+        map.put("leaderDriver", leaderDriver);//车队长司机编码
+        map.put("agentCode", agentCode);//经纪人编码
+        map.put("lon", "114.429231");//经度
+        map.put("lat", "30.460185");//纬度
+        map.put("session", session);//系统框架参数
+        map.put("appcode", appcode);//应用程序编码
+        map.put("method", "assureorder.create");//接口路径
+        map.put("format", "json");//数据交互格式
+        map.put("v", "3.0");//接口版本
+        map.put("locale", "zh_CN");
+        //忽略签名的字段
+        List<String> ignoreParamNames = new ArrayList<>();
+        //签名
+        String signValue = SignUtil.getSign(map, ignoreParamNames, appcode);
+        map.put("sign", signValue);
+        return new BaseCall(url, "POST").setData(map).addDefHeader().callService().close().getReturnJsonObject();
+    }
     /**
      * 处理待审批运单1.0
      *
@@ -3188,7 +3214,7 @@ public class SJBStockOrderService {
      * @
      */
     @Step("货运发布2.0")
-    public JSONObject stockPublish2(String userissb, String isToAllUser, String userCodes, String groupRosters, String isToAllGroup, String groupHolderCodes, String group2GroupRosters, String stockname, String stockdesc, String stocktype, String stockkind, String sourcecode, String sourcename, String targetcode, String targetname, String construct, String platecolor, String brandname, String length, String special, String openable, String stockheft, String dispatchdate, String stockcost, String sourcelon, String sourcelat, String sourcememo, String targetlon, String targetlat, String targetmemo, String price, String unitprice, String unit, String parentStockCode, String holderName, String holderPhone, String companyLinkerCode, String needReturn, String openFees, String openEmpty, String openFreight, String activeTime, String emptyMargin, String informationFees, String sourceAddressCodes, String targetAddressCodes, String stockorder, String tradeorder, String transitTime, String carNumber, String clearingCycle, String truckingOrderCode, String freightRates, String freightKind, String depositratio, String depositfee, String loadpayratio, String loadpayfee, String loadpayMonyeRatio, String loadpayMoneyFee, String loadpayEtcRatio, String loadpayEtcFee, String deliveryratio, String deliveryfee, String uploadpayratio, String uploadpayfee, String haulageoperatorstate, String haulageoperatorname, String haulageoperatorcode, String haulageoperatormoney, String laterpaystate, String channelCodes, String agentCodes, String autoUpdate, String autoCheck, String workStock, String stockKindName, String fatherStockCode, String needLater, String laterTime, String rulecode, String freightname, String freightprice, String appointmenttime, String appointmented, String offlinepay, String stockqrcode, String session) {
+    public JSONObject stockPublish2(String userissb, String isToAllUser, String userCodes, String groupRosters, String isToAllGroup, String groupHolderCodes, String group2GroupRosters, String stockname, String stockdesc, String stocktype, String stockkind, String sourcecode, String sourcename, String targetcode, String targetname, String construct, String platecolor, String brandname, String length, String special, String openable, String stockheft, String dispatchdate, String stockcost, String sourcelon, String sourcelat, String sourcememo, String targetlon, String targetlat, String targetmemo, String price, String unitprice, String unit, String parentStockCode, String holderName, String holderPhone, String companyLinkerCode, String needReturn, String openFees, String openEmpty, String openFreight, String activeTime, String emptyMargin, String informationFees, String sourceAddressCodes, String targetAddressCodes, String stockorder, String tradeorder, String transitTime, String carNumber, String clearingCycle, String truckingOrderCode, String freightRates, String freightKind, String depositratio, String depositfee, String loadpayratio, String loadpayfee, String loadpayMonyeRatio, String loadpayMoneyFee, String loadpayEtcRatio, String loadpayEtcFee, String deliveryratio, String deliveryfee, String uploadpayratio, String uploadpayfee, String haulageoperatorstate, String haulageoperatorname, String haulageoperatorcode, String haulageoperatormoney, String laterpaystate, String channelCodes, String agentCodes, String autoUpdate, String autoCheck, String workStock, String stockKindName, String fatherStockCode, String needLater, String laterTime, String rulecode, String freightname, String freightprice, String appointmenttime, String appointmented, String offlinepay, String stockqrcode, String dailyAutoEndTime, String session) {
         HashMap<String, String> map = new HashMap<>();
         map.put("userissb", userissb);//检测用户是否强行关闭承运开关，强行关闭了就传非零
         map.put("isToAllUser", isToAllUser);//是否向物流圈中所有司机发送
@@ -3282,6 +3308,7 @@ public class SJBStockOrderService {
         map.put("method", "stock.publish");//接口路径
         map.put("format", "json");//数据交互格式
         map.put("v", "2.0");//接口版本
+        map.put("dailyAutoEndTime", dailyAutoEndTime);//每日运单自动结束时间
         //忽略签名的字段
         List<String> ignoreParamNames = new ArrayList<>();
         //签名
@@ -3410,6 +3437,7 @@ public class SJBStockOrderService {
         map.put("method", "stock.query.detail");//接口路径
         map.put("format", "json");//数据交互格式
         map.put("v", "2.0");//接口版本
+        map.put("hiddenInfo", "false");//是否隐藏装货卸货手机号
         //忽略签名的字段
         List<String> ignoreParamNames = new ArrayList<>();
         //签名
@@ -4895,6 +4923,135 @@ public class SJBStockOrderService {
         map.put("session", session);//系统框架参数
         map.put("appcode", appcode);//应用程序编码
         map.put("method", "waybill.pool.all.move");//接口路径
+        map.put("format", "json");//数据交互格式
+        map.put("v", "1.0");//接口版本
+        //忽略签名的字段
+        List<String> ignoreParamNames = new ArrayList<>();
+        //签名
+        String signValue = SignUtil.getSign(map, ignoreParamNames, appcode);
+        map.put("sign", signValue);
+        return new BaseCall(url, "POST").setData(map).addDefHeader().callService().close().getReturnJsonObject();
+    }
+
+
+
+    /**
+     * 取消任务单
+     *
+     * @return response
+     * @
+     */
+    public JSONObject assureorderOrderscheduleFinishOrderSchedule(String somethingcode, String session) {
+        HashMap<String, String> map = new HashMap<>();
+        map.put("somethingcode", somethingcode);
+        map.put("session", session);//系统框架参数
+        map.put("appcode", appcode);//应用程序编码
+        map.put("method", "assureorder.orderschedule.finishOrderSchedule");//接口路径
+        map.put("format", "json");//数据交互格式
+        map.put("v", "1.0");//接口版本
+        //忽略签名的字段
+        List<String> ignoreParamNames = new ArrayList<>();
+        //签名
+        String signValue = SignUtil.getSign(map, ignoreParamNames, appcode);
+        map.put("sign", signValue);
+        return new BaseCall(url, "POST").setData(map).addDefHeader().callService().close().getReturnJsonObject();
+    }
+
+    /**
+     * 任务单--装货签到
+     *
+     * @return response
+     * @
+     */
+    public JSONObject assureorderOrderscheduleGoonCoal(String somethingcode, String lon, String lat, String addressCode, String session) {
+        HashMap<String, String> map = new HashMap<>();
+        map.put("somethingcode", somethingcode);
+        map.put("lon", lon);
+        map.put("lat", lat);
+        map.put("addressCode", addressCode);
+        map.put("session", session);//系统框架参数
+        map.put("appcode", appcode);//应用程序编码
+        map.put("method", "assureorder.orderschedule.goon.coal");//接口路径
+        map.put("format", "json");//数据交互格式
+        map.put("v", "1.0");//接口版本
+        //忽略签名的字段
+        List<String> ignoreParamNames = new ArrayList<>();
+        //签名
+        String signValue = SignUtil.getSign(map, ignoreParamNames, appcode);
+        map.put("sign", signValue);
+        return new BaseCall(url, "POST").setData(map).addDefHeader().callService().close().getReturnJsonObject();
+    }
+
+    /**
+     * 任务单详情查询
+     * @param orderScheduleCode
+     * @param session
+     * @return
+     */
+    public JSONObject assureorderQueryOrderscheduleDetailCoal(String orderScheduleCode, String session) {
+        HashMap<String, String> map = new HashMap<>();
+        map.put("orderScheduleCode", orderScheduleCode);
+        map.put("session", session);//系统框架参数
+        map.put("appcode", appcode);//应用程序编码
+        map.put("method", "assureorder.query.orderschedule.detail.coal");//接口路径
+        map.put("format", "json");//数据交互格式
+        map.put("v", "1.0");//接口版本
+        //忽略签名的字段
+        List<String> ignoreParamNames = new ArrayList<>();
+        //签名
+        String signValue = SignUtil.getSign(map, ignoreParamNames, appcode);
+        map.put("sign", signValue);
+        return new BaseCall(url, "POST").setData(map).addDefHeader().callService().close().getReturnJsonObject();
+    }
+
+
+    /**
+     * 任务单卸货签到
+     * @param orderNumber
+     * @param address
+     * @param addressCode
+     * @param longitude
+     * @param latitude
+     * @param session
+     * @return
+     */
+    public JSONObject assureorderSigninCreateUploadingCoal(String orderNumber, String address, String addressCode, String longitude, String latitude, String signWay, String agreeContract, String geoType, String session) {
+        HashMap<String, String> map = new HashMap<>();
+        map.put("signWay", "0");
+        map.put("address", address);
+        map.put("orderNumber", orderNumber);
+        map.put("addressCode", addressCode);
+        map.put("longitude", longitude);
+        map.put("latitude", latitude);
+        map.put("agreeContract", "0");
+        map.put("geoType", "2");
+
+        map.put("session", session);//系统框架参数
+        map.put("appcode", appcode);//应用程序编码
+        map.put("method", "assureorder.signin.create.uploading.coal");//接口路径
+        map.put("format", "json");//数据交互格式
+        map.put("v", "1.0");//接口版本
+        //忽略签名的字段
+        List<String> ignoreParamNames = new ArrayList<>();
+        //签名
+        String signValue = SignUtil.getSign(map, ignoreParamNames, appcode);
+        map.put("sign", signValue);
+        return new BaseCall(url, "POST").setData(map).addDefHeader().callService().close().getReturnJsonObject();
+    }
+
+
+    /**
+     * 刷新任务信息
+     * @param somethingcode
+     * @param session
+     * @return
+     */
+    public JSONObject assureorderQueryOrderscheduleOntheway(String somethingcode, String session) {
+        HashMap<String, String> map = new HashMap<>();
+        map.put("somethingcode", somethingcode);
+        map.put("session", session);//系统框架参数
+        map.put("appcode", appcode);//应用程序编码
+        map.put("method", "assureorder.query.orderschedule.ontheway");//接口路径
         map.put("format", "json");//数据交互格式
         map.put("v", "1.0");//接口版本
         //忽略签名的字段

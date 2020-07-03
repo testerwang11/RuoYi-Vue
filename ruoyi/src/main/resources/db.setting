@@ -13,7 +13,7 @@ url =jdbc:mysql://192.168.32.90:6612/plateform_test?useUnicode=true&characterEnc
 username = plateform
 password = 78b209a6129d6bbdf46d6a7aff527d5d
 
-driver = com.mysql.jdbc.Driver
+driver = com.mysql.cj.jdbc.Driver
 
 
 ## 连接池配置项

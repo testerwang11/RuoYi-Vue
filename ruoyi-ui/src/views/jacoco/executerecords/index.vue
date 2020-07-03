@@ -1,33 +1,16 @@
 <template>
   <div class="app-container">
     <el-form :model="queryParams" ref="queryForm" :inline="true" label-width="68px">
-      <el-form-item label="项目编号" prop="projectname">
+      <el-form-item label="项目名称" prop="projectname">
         <el-input
           v-model="queryParams.projectname"
-          placeholder="请输入项目编号"
+          placeholder="请输入项目名称"
           clearable
           size="small"
           @keyup.enter.native="handleQuery"
         />
       </el-form-item>
-      <el-form-item label="分支" prop="codebranch">
-        <el-input
-          v-model="queryParams.codebranch"
-          placeholder="请输入分支"
-          clearable
-          size="small"
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="代码路径" prop="diffurl">
-        <el-input
-          v-model="queryParams.diffurl"
-          placeholder="请输入代码路径"
-          clearable
-          size="small"
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
+
       <el-form-item label="执行时间" prop="executetime">
         <el-date-picker clearable size="small" style="width: 200px"
           v-model="queryParams.executetime"
@@ -36,24 +19,6 @@
           placeholder="选择执行时间">
         </el-date-picker>
       </el-form-item>
-      <el-form-item label="服务器IP" prop="serverip">
-        <el-input
-          v-model="queryParams.serverip"
-          placeholder="请输入服务器IP"
-          clearable
-          size="small"
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
-      <el-form-item label="报告路径" prop="reportpath">
-        <el-input
-          v-model="queryParams.reportpath"
-          placeholder="请输入报告路径"
-          clearable
-          size="small"
-          @keyup.enter.native="handleQuery"
-        />
-      </el-form-item>
       <el-form-item>
         <el-button type="primary" icon="el-icon-search" size="mini" @click="handleQuery">搜索</el-button>
         <el-button icon="el-icon-refresh" size="mini" @click="resetQuery">重置</el-button>
@@ -61,25 +26,6 @@
     </el-form>
 
     <el-row :gutter="10" class="mb8">
-      <el-col :span="1.5">
-        <el-button
-          type="primary"
-          icon="el-icon-plus"
-          size="mini"
-          @click="handleAdd"
-          v-hasPermi="['jacoco:executerecords:add']"
-        >新增</el-button>
-      </el-col>
-      <el-col :span="1.5">
-        <el-button
-          type="success"
-          icon="el-icon-edit"
-          size="mini"
-          :disabled="single"
-          @click="handleUpdate"
-          v-hasPermi="['jacoco:executerecords:edit']"
-        >修改</el-button>
-      </el-col>
       <el-col :span="1.5">
         <el-button
           type="danger"
@@ -104,9 +50,9 @@
     <el-table v-loading="loading" :data="executerecordsList" @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="项目编号" align="center" prop="id" />
-      <el-table-column label="项目编号" align="center" prop="projectname" />
-      <el-table-column label="分支" align="center" prop="codebranch" />
-      <el-table-column label="代码路径" align="center" prop="diffurl" />
+      <el-table-column label="项目名称" align="center" prop="projectname" />
+      <el-table-column label="代码路径" align="center" prop="remote" />
+      <el-table-column label="对比分支" align="center" prop="diffurl" />
       <el-table-column label="执行时间" align="center" prop="executetime" width="180">
         <template slot-scope="scope">
           <span>{{ parseTime(scope.row.executetime) }}</span>
@@ -133,7 +79,7 @@
         </template>
       </el-table-column>
     </el-table>
-    
+
     <pagination
       v-show="total>0"
       :total="total"
@@ -141,39 +87,6 @@
       :limit.sync="queryParams.pageSize"
       @pagination="getList"
     />
-
-    <!-- 添加或修改覆盖率拉取记录对话框 -->
-    <el-dialog :title="title" :visible.sync="open" width="500px">
-      <el-form ref="form" :model="form" :rules="rules" label-width="80px">
-        <el-form-item label="项目编号" prop="projectname">
-          <el-input v-model="form.projectname" placeholder="请输入项目编号" />
-        </el-form-item>
-        <el-form-item label="分支" prop="codebranch">
-          <el-input v-model="form.codebranch" placeholder="请输入分支" />
-        </el-form-item>
-        <el-form-item label="代码路径" prop="diffurl">
-          <el-input v-model="form.diffurl" placeholder="请输入代码路径" />
-        </el-form-item>
-        <el-form-item label="执行时间" prop="executetime">
-          <el-date-picker clearable size="small" style="width: 200px"
-            v-model="form.executetime"
-            type="date"
-            value-format="yyyy-MM-dd"
-            placeholder="选择执行时间">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="服务器IP" prop="serverip">
-          <el-input v-model="form.serverip" placeholder="请输入服务器IP" />
-        </el-form-item>
-        <el-form-item label="报告路径" prop="reportpath">
-          <el-input v-model="form.reportpath" placeholder="请输入报告路径" />
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button type="primary" @click="submitForm">确 定</el-button>
-        <el-button @click="cancel">取 消</el-button>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
@@ -205,7 +118,7 @@ export default {
         pageNum: 1,
         pageSize: 10,
         projectname: undefined,
-        codebranch: undefined,
+        remote: undefined,
         diffurl: undefined,
         executetime: undefined,
         serverip: undefined,
@@ -241,7 +154,7 @@ export default {
       this.form = {
         id: undefined,
         projectname: undefined,
-        codebranch: undefined,
+        remote: undefined,
         diffurl: undefined,
         executetime: undefined,
         serverip: undefined,

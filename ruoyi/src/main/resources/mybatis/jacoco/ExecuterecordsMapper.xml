@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.jacoco.mapper.ExecuterecordsMapper">
+    
+    <resultMap type="Executerecords" id="ExecuterecordsResult">
+        <result property="id"    column="id"    />
+        <result property="projectname"    column="projectName"    />
+        <result property="remote"    column="remote"    />
+        <result property="diffurl"    column="diffUrl"    />
+        <result property="executetime"    column="executeTime"    />
+        <result property="serverip"    column="serverIp"    />
+        <result property="reportpath"    column="reportPath"    />
+    </resultMap>
+
+    <sql id="selectExecuterecordsVo">
+        select id, projectName, remote, diffUrl, executeTime, serverIp, reportPath from jacoco_executerecords
+    </sql>
+
+    <select id="selectExecuterecordsList" parameterType="Executerecords" resultMap="ExecuterecordsResult">
+        <include refid="selectExecuterecordsVo"/>
+        <where>  
+            <if test="projectname != null  and projectname != ''"> and projectName like concat('%', #{projectname}, '%')</if>
+            <if test="remote != null  and remote != ''"> and remote = #{remote}</if>
+            <if test="diffurl != null  and diffurl != ''"> and diffUrl = #{diffurl}</if>
+            <if test="executetime != null "> and executeTime = #{executetime}</if>
+            <if test="serverip != null  and serverip != ''"> and serverIp = #{serverip}</if>
+            <if test="reportpath != null  and reportpath != ''"> and reportPath = #{reportpath}</if>
+        </where>
+    </select>
+    
+    <select id="selectExecuterecordsById" parameterType="Long" resultMap="ExecuterecordsResult">
+        <include refid="selectExecuterecordsVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertExecuterecords" parameterType="Executerecords" useGeneratedKeys="true" keyProperty="id">
+        insert into jacoco_executerecords
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="projectname != null  and projectname != ''">projectName,</if>
+            <if test="remote != null  and remote != ''">remote,</if>
+            <if test="diffurl != null  and diffurl != ''">diffUrl,</if>
+            <if test="executetime != null ">executeTime,</if>
+            <if test="serverip != null  and serverip != ''">serverIp,</if>
+            <if test="reportpath != null  and reportpath != ''">reportPath,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="projectname != null  and projectname != ''">#{projectname},</if>
+            <if test="remote != null  and remote != ''">#{remote},</if>
+            <if test="diffurl != null  and diffurl != ''">#{diffurl},</if>
+            <if test="executetime != null ">#{executetime},</if>
+            <if test="serverip != null  and serverip != ''">#{serverip},</if>
+            <if test="reportpath != null  and reportpath != ''">#{reportpath},</if>
+         </trim>
+    </insert>
+
+    <update id="updateExecuterecords" parameterType="Executerecords">
+        update jacoco_executerecords
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="projectname != null  and projectname != ''">projectName = #{projectname},</if>
+            <if test="remote != null  and remote != ''">remote = #{remote},</if>
+            <if test="diffurl != null  and diffurl != ''">diffUrl = #{diffurl},</if>
+            <if test="executetime != null ">executeTime = #{executetime},</if>
+            <if test="serverip != null  and serverip != ''">serverIp = #{serverip},</if>
+            <if test="reportpath != null  and reportpath != ''">reportPath = #{reportpath},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteExecuterecordsById" parameterType="Long">
+        delete from jacoco_executerecords where id = #{id}
+    </delete>
+
+    <delete id="deleteExecuterecordsByIds" parameterType="String">
+        delete from jacoco_executerecords where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

@@ -1,10 +1,17 @@
 package com.ruoyi.project.sjbapi.util;
 
+import com.ruoyi.framework.web.domain.AjaxResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.DigestUtils;
+
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 public class SignUtil {
 
@@ -13,6 +20,7 @@ public class SignUtil {
     private static final String UTF_8 = "UTF-8";
     private static String env = System.getProperty("env", "test");
     static HashMap<String, String> secrets = new HashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(SignUtil.class);
 
     static {
         secrets.put("100002", "2dddc367e1f2452f853d15c43bbd8078");//司机
@@ -125,6 +133,33 @@ public class SignUtil {
         List<String> ignoreParamNames = new ArrayList<>();
         ignoreParamNames.add("password");
         return getSign(tempMap, ignoreParamNames, appcode);
+    }
+
+    /**
+     * 无车网关签名
+     *
+     * @param timeStamp
+     * @param secretKey
+     * @param path
+     * @return
+     */
+    public static String getSignString(long timeStamp, String secretKey, String path, String version) {
+        log.info("timeStamp:" + timeStamp);
+        log.info("secretKey:" + secretKey);
+        log.info("path:" + path);
+
+        Map<String, String> paramMap = new HashMap<>(3);
+        paramMap.put("timestamp", String.valueOf(timeStamp));
+        paramMap.put("path", path);
+        paramMap.put("version", version);
+        Iterator it = paramMap.keySet().iterator();
+        List<String> storedKeys = new ArrayList<>();
+        while (it.hasNext()) {
+            storedKeys.add((String) it.next());
+        }
+        storedKeys.sort(Comparator.naturalOrder());
+        String sign = ((String) storedKeys.stream().map(key -> String.join("", new CharSequence[]{key, (CharSequence) paramMap.get(key)})).collect(Collectors.joining())).trim().concat(secretKey);
+        return DigestUtils.md5DigestAsHex(sign.getBytes()).toUpperCase();
     }
 
     //appcode=100060&method=account.login&format=xml&v=1.0&account=1354133412&password=123456&userType=1&deviceNum=123&force=true&sign=456

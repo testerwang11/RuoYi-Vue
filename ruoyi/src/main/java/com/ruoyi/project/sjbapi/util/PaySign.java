@@ -24,16 +24,34 @@ public class PaySign {
         return JSONObject.parseObject(res).getString("data");
     }
 
+    public static String getSubmitToken(String merchantNo, String signType, String privateKey) {
+        JSONObject data = new JSONObject();
+        data.put("merchantNo", merchantNo);
+        data.put("signType", signType);
+        data.put("sign", PaySignUtils.genSignByJson(signType, privateKey, data));
+        String res = HttpUtil.post(getsubmittoken_reqUrl, data.toJSONString());
+        return JSONObject.parseObject(res).getString("data");
+    }
+
     public static String signByJson(JSONObject req) {
-        try{
+        try {
             JSONArray paramValues = req.getJSONArray("paramValues");
             JSONObject param = paramValues.getJSONObject(0);
-            String token = getSubmitToken(param.getString("merchantNo"), param.getString("signType").toUpperCase());
-            param.put("token", token);
-            param.put("sign", PaySignUtils.genSignByJson(param.getString("signType").toUpperCase(), privateKey, param));
-            paramValues.fluentClear().add(0, param);
-            req.replace("paramValues", paramValues);
-        }catch (Exception e){
+            if(req.containsKey("privateKey")) {
+                String token = getSubmitToken(param.getString("merchantNo"), param.getString("signType").toUpperCase(), req.getString("privateKey"));
+                param.put("token", token);
+                param.put("sign", PaySignUtils.genSignByJson(param.getString("signType").toUpperCase(), req.getString("privateKey"), param));
+                paramValues.fluentClear().add(0, param);
+                req.replace("paramValues", paramValues);
+            }else {
+                String token = getSubmitToken(param.getString("merchantNo"), param.getString("signType").toUpperCase());
+                param.put("token", token);
+                param.put("sign", PaySignUtils.genSignByJson(param.getString("signType").toUpperCase(), privateKey, param));
+                paramValues.fluentClear().add(0, param);
+                req.replace("paramValues", paramValues);
+            }
+
+        } catch (Exception e) {
             String token = getSubmitToken(req.getString("merchantNo"), req.getString("signType").toUpperCase());
             req.put("token", token);
             req.put("sign", PaySignUtils.genSignByJson(req.getString("signType").toUpperCase(), privateKey, req));
@@ -46,19 +64,30 @@ public class PaySign {
         JSONObject param = paramValues.getJSONObject(0);
 
         String beanPath = req.getJSONArray("paramTypes").getString(0);
-        String token = getSubmitToken(param.getString("merchantNo"), param.getString("signType").toUpperCase());
-
-        param.put("token", token);
-        Object bean = BeanUtil.fillBeanWithMapIgnoreCase(param, Class.forName(beanPath).newInstance(), false);
-        param.put("sign", PaySignUtils.genSignByBean(param.getString("signType").toUpperCase(), privateKey, bean));
-
-        paramValues.fluentClear().add(0, param);
-        req.replace("paramValues", paramValues);
+        if(req.containsKey("privateKey")){
+            String token = getSubmitToken(param.getString("merchantNo"), param.getString("signType").toUpperCase(), req.getString("privateKey"));
+            param.put("token", token);
+            Object bean = BeanUtil.fillBeanWithMapIgnoreCase(param, Class.forName(beanPath).newInstance(), false);
+            param.put("sign", PaySignUtils.genSignByBean(param.getString("signType").toUpperCase(), privateKey, bean));
+            paramValues.fluentClear().add(0, param);
+            req.replace("paramValues", paramValues);
+        }else {
+            String token = getSubmitToken(param.getString("merchantNo"), param.getString("signType").toUpperCase());
+            param.put("token", token);
+            Object bean = BeanUtil.fillBeanWithMapIgnoreCase(param, Class.forName(beanPath).newInstance(), false);
+            param.put("sign", PaySignUtils.genSignByBean(param.getString("signType").toUpperCase(), privateKey, bean));
+            paramValues.fluentClear().add(0, param);
+            req.replace("paramValues", paramValues);
+        }
         return req.toString();
     }
 
     public static String signByJsonNoToken(JSONObject req) {
-        req.put("sign", PaySignUtils.genSignByJson(req.getString("signType").toUpperCase(), privateKey, req));
+        if(req.containsKey("privateKey")){
+            req.put("sign", PaySignUtils.genSignByJson(req.getString("signType").toUpperCase(), req.getString("privateKey"), req));
+        }else {
+            req.put("sign", PaySignUtils.genSignByJson(req.getString("signType").toUpperCase(), privateKey, req));
+        }
         return req.toJSONString();
     }
 

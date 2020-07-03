@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.project.jacoco.mapper.ProjectMapper">
+    
+    <resultMap type="Project" id="ProjectResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="team"    column="team"    />
+        <result property="remote"    column="remote"    />
+        <result property="branch"    column="branch"    />
+        <result property="config"    column="config"    />
+    </resultMap>
+
+    <sql id="selectProjectVo">
+        select id, name, team, remote, branch, config from jacoco_project
+    </sql>
+
+    <select id="selectProjectList" parameterType="Project" resultMap="ProjectResult">
+        <include refid="selectProjectVo"/>
+        <where>  
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="team != null  and team != ''"> and team = #{team}</if>
+            <if test="remote != null  and remote != ''"> and remote = #{remote}</if>
+            <if test="branch != null  and branch != ''"> and branch = #{branch}</if>
+            <if test="config != null  and config != ''"> and config = #{config}</if>
+        </where>
+    </select>
+    
+    <select id="selectProjectById" parameterType="Long" resultMap="ProjectResult">
+        <include refid="selectProjectVo"/>
+        where id = #{id}
+    </select>
+        
+    <insert id="insertProject" parameterType="Project" useGeneratedKeys="true" keyProperty="id">
+        insert into jacoco_project
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null  and name != ''">name,</if>
+            <if test="team != null  and team != ''">team,</if>
+            <if test="remote != null  and remote != ''">remote,</if>
+            <if test="branch != null  and branch != ''">branch,</if>
+            <if test="config != null  and config != ''">config,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null  and name != ''">#{name},</if>
+            <if test="team != null  and team != ''">#{team},</if>
+            <if test="remote != null  and remote != ''">#{remote},</if>
+            <if test="branch != null  and branch != ''">#{branch},</if>
+            <if test="config != null  and config != ''">#{config},</if>
+         </trim>
+    </insert>
+
+    <update id="updateProject" parameterType="Project">
+        update jacoco_project
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null  and name != ''">name = #{name},</if>
+            <if test="team != null  and team != ''">team = #{team},</if>
+            <if test="remote != null  and remote != ''">remote = #{remote},</if>
+            <if test="branch != null  and branch != ''">branch = #{branch},</if>
+            <if test="config != null  and config != ''">config = #{config},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteProjectById" parameterType="Long">
+        delete from jacoco_project where id = #{id}
+    </delete>
+
+    <delete id="deleteProjectByIds" parameterType="String">
+        delete from jacoco_project where id in 
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    
+</mapper>

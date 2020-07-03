@@ -99,6 +99,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                 ).permitAll()
                 .antMatchers("/profile/**").anonymous()
                 .antMatchers("/common/download**").anonymous()
+                .antMatchers("/common/download/resource**").anonymous()
                 .antMatchers("/swagger-ui.html").anonymous()
                 .antMatchers("/swagger-resources/**").anonymous()
                 .antMatchers("/webjars/**").anonymous()
@@ -106,8 +107,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter
                 .antMatchers("/druid/**").anonymous()
                 .antMatchers("/sjb/**").anonymous()
                 .antMatchers("/sign/**").anonymous()
+                .antMatchers("/demo/**").anonymous()
 
-                //.antMatchers("/test").anonymous()
                 // 除上面外的所有请求全部需要鉴权认证
                 .anyRequest().authenticated()
                 .and()

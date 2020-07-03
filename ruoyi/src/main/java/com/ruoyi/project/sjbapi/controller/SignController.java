@@ -1,13 +1,18 @@
 package com.ruoyi.project.sjbapi.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson.parser.Feature;
+import com.ruoyi.framework.web.domain.AjaxResult;
 import com.ruoyi.project.sjbapi.util.MlsSign;
 import com.ruoyi.project.sjbapi.util.PaySign;
-import com.ruoyi.project.sjbapi.util.PaySignUtils;
+import com.ruoyi.project.sjbapi.util.SignUtil;
 import com.ruoyi.project.sjbapi.util.SjbNoCarSign;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.LinkedHashMap;
 
 @RestController
 @RequestMapping("/sign")
@@ -48,6 +53,20 @@ public class SignController {
     }
 
     /**
+     * 无车网关签名
+     * @param request
+     * @return
+     */
+    @PostMapping({"/nocarapi"})
+    @ResponseBody
+    public AjaxResult nocarapi(@RequestBody JSONObject request) {
+        log.info("请求参数:"+ request.toJSONString());
+        String sign = SignUtil.getSignString(request.getLong("timeStamp"), request.getString("secretKey"), request.getString("path"), request.getString("version"));
+        return AjaxResult.success("ok", sign);
+
+    }
+
+    /**
      * 网关签名 token+sign
      * @param request
      * @return
@@ -59,6 +78,20 @@ public class SignController {
     }
 
     /**
+     * 网关签名 token+sign 保持传入得顺序
+     * @param request
+     * @return
+     */
+    @PostMapping({"/pay/byorder"})
+    @ResponseBody
+    public String pay(@RequestBody String request) {
+        JSONObject retObj = new JSONObject(true);
+        retObj = JSON.parseObject(request, Feature.OrderedField);
+        return PaySign.signByJson(retObj);
+    }
+
+
+    /**
      * 网关签名 sign
      * @param request
      * @return
@@ -68,6 +101,7 @@ public class SignController {
     public String pay2(@RequestBody JSONObject request) {
         return PaySign.signByJsonNoToken(request);
     }
+
 
     /**
      * 网关签名 sign
@@ -84,6 +118,7 @@ public class SignController {
             return PaySign.signByJson(request);
         }
     }
+
 
     /**
      * 煤联社加密
